@@ -1,9 +1,5 @@
 /.DS_Store
-/2.pdf
 /IEEEtran
-/Identifying Parking Spaces  Detecting Occupancy Using Vision-based IoT Devices (2).pdf
-/ak2021effect_PCS2021 (1).pdf
-/lyko2023differential (1).pdf
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
@@ -30,3 +26,8 @@
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
 *.blg
+
+.conda/
+03_project/01_basic/data/
+03_project/future_works/02_audience_awareness/
+*.zip
