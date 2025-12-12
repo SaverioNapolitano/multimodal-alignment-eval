@@ -251,7 +251,7 @@ def plot_flip_rates(folder_summary: pd.DataFrame, output_dir: Path) -> None:
     )
     ax.set_ylim(0, 1)
     ax.set_ylabel("Flip rate (share not in majority order)")
-    ax.set_xlabel("Reference image folder")
+    ax.set_xlabel("Reference image")
     ax.set_title("Order stability per image")
     ax.legend(title="Pair")
 
@@ -300,9 +300,9 @@ def plot_mean_rank_diff_heatmap(folder_summary: pd.DataFrame, output_dir: Path) 
         linewidths=0.5,
         linecolor="black",
     )
-    ax.set_xlabel("Reference image folder")
+    ax.set_xlabel("Reference image")
     ax.set_ylabel("Pair")
-    ax.set_title("Mean rank difference by folder")
+    ax.set_title("Mean rank difference by image")
     # Adjust annotation color based on background luminance for readability in grayscale
     norm = ax.collections[0].norm
     for text in ax.texts:

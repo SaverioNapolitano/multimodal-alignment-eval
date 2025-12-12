@@ -5,6 +5,8 @@ Outputs (written next to this script by default):
 - kendalls_w.csv : Kendall's W per image (inter-rater agreement across humans).
 - correlations.csv : Kendall's Tau, Spearman, and Pearson correlations per folder per metric comparing
   human average ranks vs automatic metric ranks.
+- spearman_bootstrap_ci.csv : bootstrap 95% CI for mean Spearman per metric.
+- spearman_wilcoxon.csv : Wilcoxon signed-rank tests comparing Spearman values (CLIP vs others).
 """
 
 import argparse
@@ -15,7 +17,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import kendalltau, pearsonr, spearmanr
+from scipy.stats import kendalltau, pearsonr, spearmanr, wilcoxon
 
 BASE_DIR = Path(__file__).parent
 HUMAN_RANKINGS = BASE_DIR / "rankings.txt"
@@ -262,6 +264,70 @@ def plot_correlations_combined(corr_df: pd.DataFrame, output_path: Path):
     plt.close(fig)
 
 
+def bootstrap_mean_ci(values: np.ndarray, n_boot: int = 10000, alpha: float = 0.05) -> Tuple[float, float]:
+    """Bootstrap mean confidence interval."""
+    rng = np.random.default_rng(0)
+    samples = rng.choice(values, size=(n_boot, len(values)), replace=True)
+    means = samples.mean(axis=1)
+    lower = np.percentile(means, 100 * (alpha / 2))
+    upper = np.percentile(means, 100 * (1 - alpha / 2))
+    return float(lower), float(upper)
+
+
+def spearman_bootstrap_ci(corr_df: pd.DataFrame) -> pd.DataFrame:
+    """Compute bootstrap CI for mean Spearman per metric."""
+    rows = []
+    for metric, _ in METRICS:
+        vals = corr_df[corr_df["metric"] == metric]["spearman"].dropna().to_numpy()
+        mean = float(vals.mean()) if len(vals) else np.nan
+        lower, upper = bootstrap_mean_ci(vals) if len(vals) else (np.nan, np.nan)
+        rows.append({"metric": metric, "mean_spearman": mean, "ci_lower": lower, "ci_upper": upper})
+    return pd.DataFrame(rows)
+
+
+def wilcoxon_spearman(corr_df: pd.DataFrame) -> pd.DataFrame:
+    """Wilcoxon signed-rank (one-sided, greater) for Spearman: CLIP vs LPIPS and CLIP vs MS-SSIM."""
+    rows = []
+    pivot = corr_df.pivot(index="folder", columns="metric", values="spearman")
+    comparisons = [("clip_cosine", "lpips"), ("clip_cosine", "ms_ssim")]
+    for a, b in comparisons:
+        paired = pivot[[a, b]].dropna()
+        n = len(paired)
+        if n == 0:
+            stat = pval = np.nan
+        else:
+            stat, pval = wilcoxon(paired[a], paired[b], alternative="greater", zero_method="pratt")
+        rows.append({"comparison": f"{a}_gt_{b}", "n": n, "wilcoxon_stat": stat, "pvalue": pval})
+    return pd.DataFrame(rows)
+
+
+def plot_spearman_ci(boot_df: pd.DataFrame, output_path: Path) -> None:
+    """Bar plot of mean Spearman with bootstrap 95% CI."""
+    sns.set_theme(style="whitegrid")
+    fig, ax = plt.subplots(figsize=(6, 4))
+    errors = [
+        boot_df["mean_spearman"] - boot_df["ci_lower"],
+        boot_df["ci_upper"] - boot_df["mean_spearman"],
+    ]
+    ax.bar(
+        boot_df["metric"],
+        boot_df["mean_spearman"],
+        yerr=errors,
+        capsize=4,
+        color="white",
+        edgecolor="black",
+        hatch=["..", "//", "xx"],
+    )
+    ax.axhline(0, color="gray", linestyle="--", linewidth=1)
+    ax.set_ylabel("Mean Spearman (human ranks vs metric ranks)")
+    ax.set_xlabel("Metric")
+    ax.set_title("Mean Spearman with 95% bootstrap CI")
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=300)
+    plt.close(fig)
+
+
 def main():
     args = parse_args()
     sns.set_theme(style="whitegrid")
@@ -294,8 +360,17 @@ def main():
     corr_df.to_csv(output_dir / "correlations.csv", index=False)
     plot_correlations(corr_df, output_dir)
 
+    # Spearman bootstrap CI and Wilcoxon tests (CLIP vs others)
+    boot_df = spearman_bootstrap_ci(corr_df)
+    boot_df.to_csv(output_dir / "spearman_bootstrap_ci.csv", index=False)
+    wilcoxon_df = wilcoxon_spearman(corr_df)
+    wilcoxon_df.to_csv(output_dir / "spearman_wilcoxon.csv", index=False)
+    plot_spearman_ci(boot_df, output_dir / "spearman_mean_ci.png")
+
     print(f"Wrote Kendall's W to {output_dir / 'kendalls_w.csv'}")
     print(f"Wrote correlations to {output_dir / 'correlations.csv'}")
+    print(f"Wrote Spearman bootstrap CI to {output_dir / 'spearman_bootstrap_ci.csv'}")
+    print(f"Wrote Wilcoxon Spearman tests to {output_dir / 'spearman_wilcoxon.csv'}")
 
 
 if __name__ == "__main__":
