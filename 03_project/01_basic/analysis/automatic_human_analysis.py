@@ -9,6 +9,7 @@ Outputs:
 """
 
 import argparse
+import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence
 
@@ -22,7 +23,9 @@ DEFAULT_CSV = BASE_DIR / "automatic_measures_results.csv"
 DEFAULT_RANKINGS = BASE_DIR / "rankings.txt"
 OUTPUT_DIR = BASE_DIR / "automatic_measures_report"
 
-VARIANTS = ["a", "b", "c", "d"]
+VARIANT_MAP = {"a": "gg", "b": "cg", "c": "gc", "d": "cc"}
+VARIANT_KEYS = list(VARIANT_MAP.keys())
+VARIANTS = [VARIANT_MAP[k] for k in VARIANT_KEYS]
 METRICS = [
     ("lpips", True),  # lower is better
     ("ms_ssim", False),
@@ -46,14 +49,18 @@ SOURCE_SHORT = {
     "lpips_global_win_percent": "LPIPS",
     "ms_ssim_global_win_percent": "MS-SSIM",
 }
-HATCHES_VARIANT = {"a": "//", "b": "\\\\", "c": "xx", "d": ".."}
+HATCHES_VARIANT = {"gg": "//", "cg": "\\\\", "gc": "xx", "cc": ".."}
 HATCHES_SOURCE = {
     "human_top1_percent": "//",
     "clip_global_win_percent": "\\\\",
     "lpips_global_win_percent": "xx",
     "ms_ssim_global_win_percent": "..",
 }
-MARKERS_VARIANT = {"a": "o", "b": "s", "c": "^", "d": "D"}
+MARKERS_VARIANT = {"gg": "o", "cg": "s", "gc": "^", "cc": "D"}
+
+
+def normalize_variant(variant: str) -> str:
+    return VARIANT_MAP.get(variant, variant)
 
 
 def parse_args():
@@ -92,6 +99,16 @@ def load_automatic_measures(csv_path: Path) -> pd.DataFrame:
     missing = expected_cols - set(df.columns)
     if missing:
         raise ValueError(f"Missing columns in {csv_path}: {sorted(missing)}")
+    raw_variants = set(df["variant"])
+    if raw_variants & set(VARIANT_KEYS):
+        warnings.warn(
+            "Legacy variants (a-d) detected in automatic measures; mapping to gg/cg/gc/cc.",
+            stacklevel=2,
+        )
+    df["variant"] = df["variant"].map(normalize_variant)
+    unknown = set(df["variant"]) - set(VARIANTS)
+    if unknown:
+        raise ValueError(f"Unexpected variants in {csv_path}: {sorted(unknown)}")
     return df
 
 
@@ -187,6 +204,7 @@ def plot_best_heatmap(best_counts: pd.DataFrame, output_path: Path):
 def load_human_blocks(path: Path, block_size: int = 15) -> List[List[Sequence[str]]]:
     blocks: List[List[Sequence[str]]] = []
     current: List[Sequence[str]] = []
+    warned_legacy = False
     with path.open("r") as f:
         for line_num, line in enumerate(f, start=1):
             stripped = line.strip()
@@ -200,9 +218,15 @@ def load_human_blocks(path: Path, block_size: int = 15) -> List[List[Sequence[st
             if len(parts) != 5:
                 raise ValueError(f"Malformed line {line_num}: {line}")
             ranking = parts[1:]
-            if sorted(ranking) != sorted(VARIANTS):
+            if sorted(ranking) != sorted(VARIANT_KEYS):
                 raise ValueError(f"Invalid ranking on line {line_num}: {ranking}")
-            current.append(ranking)
+            if not warned_legacy:
+                warnings.warn(
+                    "Legacy rankings (a-d) detected; mapping to gg/cg/gc/cc.",
+                    stacklevel=2,
+                )
+                warned_legacy = True
+            current.append([VARIANT_MAP[v] for v in ranking])
             if len(current) == block_size:
                 blocks.append(current)
                 current = []

@@ -15,3 +15,7 @@ Written report + presentation (10-minute speech) about how the work fits in rela
 ## Project 
 
 4-pages article following the IEEE double column style. The data that has been used is available [here](https://drive.google.com/drive/folders/1oBSlQzUo0roGMpDererxHVLPbUIqU4gt?usp=share_link)
+
+## Presentation 
+
+15-minute oral summary of the work with the research project, in particular results and conclusions.

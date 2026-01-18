@@ -2,17 +2,21 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from pathlib import Path
+import warnings
 
 # File lives alongside this script
 FILE_PATH = Path(__file__).parent / "rankings.txt"
 OUTPUT_DIR = Path(__file__).parent / "human_preferences_report"
-letters = ['a', 'b', 'c', 'd']
+VARIANT_MAP = {"a": "gg", "b": "cg", "c": "gc", "d": "cc"}
+VARIANT_KEYS = list(VARIANT_MAP.keys())
+VARIANTS = [VARIANT_MAP[k] for k in VARIANT_KEYS]
 positions = ['1', '2', '3', '4']
 
 
 def load_blocks(path: Path, block_size: int = 15):
     """Load rankings into blocks of `block_size` lines (one evaluator per block)."""
     blocks, current = [], []
+    warned_legacy = False
     with path.open("r") as f:
         for line_num, line in enumerate(f, start=1):
             stripped = line.strip()
@@ -27,10 +31,15 @@ def load_blocks(path: Path, block_size: int = 15):
                 raise ValueError(f"Malformed line {line_num}: {line}")
 
             ranking = parts[1:]
-            if sorted(ranking) != letters:
+            if sorted(ranking) != VARIANT_KEYS:
                 raise ValueError(f"Invalid ranking on line {line_num}: {ranking}")
-
-            current.append(ranking)
+            if not warned_legacy:
+                warnings.warn(
+                    "Legacy rankings (a-d) detected; mapping to gg/cg/gc/cc.",
+                    stacklevel=2,
+                )
+                warned_legacy = True
+            current.append([VARIANT_MAP[v] for v in ranking])
             if len(current) == block_size:
                 blocks.append(current)
                 current = []
@@ -49,12 +58,12 @@ def load_blocks(path: Path, block_size: int = 15):
 
 
 def tally_blocks(blocks):
-    """Return count matrix for given blocks: rows=letter, cols=position."""
+    """Return count matrix for given blocks: rows=variant, cols=position."""
     counts = np.zeros((4, 4), dtype=int)
     for block in blocks:
         for ranking in block:
             for pos, letter in enumerate(ranking):
-                counts[letters.index(letter), pos] += 1
+                counts[VARIANTS.index(letter), pos] += 1
     return counts
 
 
@@ -66,9 +75,9 @@ def to_percentages(counts):
 
 
 def plot_heatmap(percentages, title, save_path: Path):
-    """Plot heatmap with letters on the vertical axis."""
+    """Plot heatmap with variants on the vertical axis."""
     save_path.parent.mkdir(parents=True, exist_ok=True)
-    heatmap_data = percentages  # rows=letters, cols=positions
+    heatmap_data = percentages  # rows=variants, cols=positions
     plt.figure(figsize=(6, 4))
     ax = sns.heatmap(
         heatmap_data,
@@ -76,7 +85,7 @@ def plot_heatmap(percentages, title, save_path: Path):
         fmt=".1f",
         cmap="Greys",
         xticklabels=positions,
-        yticklabels=letters,
+        yticklabels=VARIANTS,
         cbar_kws={'label': 'Percentage (%)'},
         linewidths=0.5,
         linecolor="black",

@@ -1,5 +1,5 @@
 """
-Analyze ordering consistency for variant pairs (a vs b and c vs d) across raters and reference images.
+Analyze ordering consistency for variant pairs (gg vs cg and gc vs cc) across raters and reference images.
 
 Outputs:
 - pair_consistency_report/pair_differences.csv : per-rater rank differences for each pair.
@@ -13,6 +13,7 @@ Definitions:
 """
 
 import argparse
+import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
@@ -24,8 +25,10 @@ import seaborn as sns
 BASE_DIR = Path(__file__).parent
 DEFAULT_RANKINGS = BASE_DIR / "rankings.txt"
 OUTPUT_DIR = BASE_DIR / "pair_consistency_report"
-VARIANTS = ["a", "b", "c", "d"]
-PAIRS: List[Tuple[str, str]] = [("a", "b"), ("c", "d")]
+VARIANT_MAP = {"a": "gg", "b": "cg", "c": "gc", "d": "cc"}
+VARIANT_KEYS = list(VARIANT_MAP.keys())
+VARIANTS = [VARIANT_MAP[k] for k in VARIANT_KEYS]
+PAIRS: List[Tuple[str, str]] = [("gg", "cg"), ("gc", "cc")]
 
 
 def parse_args() -> argparse.Namespace:
@@ -43,6 +46,7 @@ def load_blocks(path: Path, block_size: int = 15) -> List[List[Sequence[str]]]:
     """Load rankings into blocks of `block_size` lines (one evaluator per block)."""
     blocks: List[List[Sequence[str]]] = []
     current: List[Sequence[str]] = []
+    warned_legacy = False
     with path.open("r") as f:
         for line_num, line in enumerate(f, start=1):
             stripped = line.strip()
@@ -56,10 +60,15 @@ def load_blocks(path: Path, block_size: int = 15) -> List[List[Sequence[str]]]:
             if len(parts) != 5:
                 raise ValueError(f"Malformed line {line_num}: {line}")
             ranking = parts[1:]
-            if sorted(ranking) != sorted(VARIANTS):
+            if sorted(ranking) != sorted(VARIANT_KEYS):
                 raise ValueError(f"Invalid ranking on line {line_num}: {ranking}")
-
-            current.append(ranking)
+            if not warned_legacy:
+                warnings.warn(
+                    "Legacy rankings (a-d) detected; mapping to gg/cg/gc/cc.",
+                    stacklevel=2,
+                )
+                warned_legacy = True
+            current.append([VARIANT_MAP[v] for v in ranking])
             if len(current) == block_size:
                 blocks.append(current)
                 current = []
@@ -209,10 +218,10 @@ def summarize_global(pair_df: pd.DataFrame) -> pd.DataFrame:
 def compute_preference_table(pair_df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute a single-row table with percentages for each ordering within its own pair:
-    - a > b
-    - b > a
-    - c > d
-    - d > c
+    - gg > cg
+    - cg > gg
+    - gc > cc
+    - cc > gc
     Percentages are computed independently per pair (ties reduce the total per-pair sum).
     """
     def pair_pct(pair_name: str, condition: pd.Series) -> float:
@@ -226,10 +235,10 @@ def compute_preference_table(pair_df: pd.DataFrame) -> pd.DataFrame:
     is_second_better = pair_df["rank_diff"] > 0
 
     row = {
-        "a>b": pair_pct("a_vs_b", is_first_better),
-        "b>a": pair_pct("a_vs_b", is_second_better),
-        "c>d": pair_pct("c_vs_d", is_first_better),
-        "d>c": pair_pct("c_vs_d", is_second_better),
+        "gg>cg": pair_pct("gg_vs_cg", is_first_better),
+        "cg>gg": pair_pct("gg_vs_cg", is_second_better),
+        "gc>cc": pair_pct("gc_vs_cc", is_first_better),
+        "cc>gc": pair_pct("gc_vs_cc", is_second_better),
     }
     return pd.DataFrame([row])
 
@@ -239,7 +248,7 @@ def plot_flip_rates(folder_summary: pd.DataFrame, output_dir: Path) -> None:
     sns.set_theme(style="whitegrid")
     plt.figure(figsize=(10, 4))
     order = sorted(folder_summary["folder"].unique(), key=lambda x: int(x))
-    hue_order = ["a_vs_b", "c_vs_d"]
+    hue_order = ["gg_vs_cg", "gc_vs_cc"]
     ax = sns.barplot(
         data=folder_summary,
         x="folder",
@@ -247,7 +256,7 @@ def plot_flip_rates(folder_summary: pd.DataFrame, output_dir: Path) -> None:
         hue="pair",
         order=order,
         hue_order=hue_order,
-        palette={"a_vs_b": "tab:blue", "c_vs_d": "tab:orange"},
+        palette={"gg_vs_cg": "tab:blue", "gc_vs_cc": "tab:orange"},
     )
     ax.set_ylim(0, 1)
     ax.set_ylabel("Flip rate (share not in majority order)")
@@ -255,7 +264,7 @@ def plot_flip_rates(folder_summary: pd.DataFrame, output_dir: Path) -> None:
     ax.set_title("Order stability per image")
     ax.legend(title="Pair")
 
-    # Annotate bars with the majority order per folder/pair (e.g., "a > b", "tie")
+    # Annotate bars with the majority order per folder/pair (e.g., "gg > cg", "tie")
     label_map = {(row["pair"], row["folder"]): row["majority_order"] for _, row in folder_summary.iterrows()}
     for container, pair in zip(ax.containers, hue_order):
         for bar, folder in zip(container, order):
@@ -329,7 +338,7 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
         x="pair",
         y="weighted_flip_rate",
         ax=axes[0],
-        palette={"a_vs_b": "tab:blue", "c_vs_d": "tab:orange"},
+        palette={"gg_vs_cg": "tab:blue", "gc_vs_cc": "tab:orange"},
     )
     axes[0].set_ylim(0, 1)
     axes[0].set_title("Weighted flip rate across folders")
@@ -342,7 +351,7 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
         x="pair",
         y="weighted_mean_abs_rank_diff",
         ax=axes[1],
-        palette={"a_vs_b": "tab:blue", "c_vs_d": "tab:orange"},
+        palette={"gg_vs_cg": "tab:blue", "gc_vs_cc": "tab:orange"},
     )
     axes[1].set_title("Weighted mean |rank diff| across folders")
     axes[1].set_ylabel("Mean absolute rank difference")
@@ -358,7 +367,7 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
         data=global_summary,
         x="pair",
         y="global_flip_rate",
-        palette={"a_vs_b": "tab:blue", "c_vs_d": "tab:orange"},
+        palette={"gg_vs_cg": "tab:blue", "gc_vs_cc": "tab:orange"},
     )
     plt.ylim(0, 1)
     plt.ylabel("Global flip rate")
@@ -372,13 +381,13 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
 def plot_preference_table(pref_table: pd.DataFrame, output_dir: Path) -> None:
     """Plot the single-row preference percentages as a bar chart."""
     sns.set_theme(style="whitegrid")
-    order = ["a>b", "b>a", "c>d", "d>c"]
+    order = ["gg>cg", "cg>gg", "gc>cc", "cc>gc"]
     melted = pref_table.melt(value_vars=order, var_name="ordering", value_name="percentage")
     palette = {
-        "a>b": "tab:blue",
-        "b>a": "tab:cyan",
-        "c>d": "tab:orange",
-        "d>c": "gold",
+        "gg>cg": "tab:blue",
+        "cg>gg": "tab:cyan",
+        "gc>cc": "tab:orange",
+        "cc>gc": "gold",
     }
     plt.figure(figsize=(6, 4))
     ax = sns.barplot(data=melted, x="ordering", y="percentage", palette=palette, order=order)

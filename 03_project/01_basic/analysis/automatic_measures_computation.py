@@ -1,4 +1,5 @@
 import argparse
+import warnings
 import csv
 import sys
 from pathlib import Path
@@ -17,7 +18,8 @@ OUTPUT_CSV = BASE_DIR / "automatic_measures_results.csv"
 
 # Accept common image extensions
 IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".webp"]
-VARIANTS = ["a", "b", "c", "d"]
+FILE_VARIANTS = ["a", "b", "c", "d"]
+VARIANT_MAP = {"a": "gg", "b": "cg", "c": "gc", "d": "cc"}
 
 
 def find_image(folder: Path, stem: str) -> Optional[Path]:
@@ -95,8 +97,8 @@ def collect_folder_results(folder: Path, lpips_model, device, clip_model, clip_p
     ref_img = load_pil(ref_path)
     results = []
 
-    for variant in VARIANTS:
-        gen_path = find_image(folder, f"{folder_name}_{variant}")
+    for variant_key in FILE_VARIANTS:
+        gen_path = find_image(folder, f"{folder_name}_{variant_key}")
         if not gen_path:
             # Skip missing variants but continue processing the rest
             continue
@@ -107,7 +109,7 @@ def collect_folder_results(folder: Path, lpips_model, device, clip_model, clip_p
         results.append(
             {
                 "folder": folder_name,
-                "variant": variant,
+                "variant": VARIANT_MAP[variant_key],
                 "lpips": lpips_score,
                 "ms_ssim": msssim_score,
                 "clip_cosine": clip_cos,
@@ -164,6 +166,10 @@ def iter_target_folders(base_dir: Path, only: Optional[Sequence[str]] = None) ->
 
 def main():
     args = parse_args()
+    warnings.warn(
+        "Using legacy file variants (a-d); output variants will be mapped to gg/cg/gc/cc.",
+        stacklevel=2,
+    )
     device = choose_device(args.device)
     device = 'cpu'
     print(f"Using device: {device}", file=sys.stderr)

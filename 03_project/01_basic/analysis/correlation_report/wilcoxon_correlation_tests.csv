@@ -1,7 +1,7 @@
 stat,comparison,n,wilcoxon_stat,pvalue
 kendall_tau,clip_cosine_vs_lpips,15,30.5,0.2006135843376048
-kendall_tau,clip_cosine_vs_ms_ssim,15,29.0,0.09291126623645339
+kendall_tau,clip_cosine_vs_ms_ssim,15,29.0,0.09291126623645342
 spearman,clip_cosine_vs_lpips,15,31.0,0.21045723680792494
-spearman,clip_cosine_vs_ms_ssim,15,31.5,0.11147974006584337
+spearman,clip_cosine_vs_ms_ssim,15,31.5,0.11147974006584341
 pearson,clip_cosine_vs_lpips,15,42.0,0.3915591750527805
 pearson,clip_cosine_vs_ms_ssim,15,34.0,0.14736913552932826
