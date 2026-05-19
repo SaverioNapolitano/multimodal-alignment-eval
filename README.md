@@ -1,4 +1,6 @@
-# Multimodal Alignment
+# QRD
+
+Material for the Quantitative Research and Development exam.
 
 Project: **Evaluating Multimodal Alignment in ChatGPT and Gemini: An Empirical Study of Inter- and Intra-Model Consistency in Image Description and Generation**
 
