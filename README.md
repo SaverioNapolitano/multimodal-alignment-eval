@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
 *Note: Replace the XXXXXXX with your actual Zenodo Concept DOI once generated.*
 
-This repository contains the code, data, and supplementary materials for the paper **"Evaluating Multimodal Alignment in ChatGPT and Gemini: An Empirical Study of Inter- and Intra-Model Consistency in Image Description and Generation"**.
+This repository contains the code and data for the paper **"Evaluating Multimodal Alignment in ChatGPT and Gemini: An Empirical Study of Inter- and Intra-Model Consistency in Image Description and Generation"**.
 
 ## Overview
 
