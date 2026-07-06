@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Sequence
 
 import matplotlib.pyplot as plt
+import mdpi_style
+mdpi_style.apply()
 from matplotlib.patches import Patch
 import pandas as pd
 import seaborn as sns
@@ -177,7 +179,7 @@ def plot_metric_means(variant_means: pd.DataFrame, output_path: Path):
     ]
     ax.legend(handles=handles, title="Variant")
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    mdpi_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -188,15 +190,26 @@ def plot_best_heatmap(best_counts: pd.DataFrame, output_path: Path):
         heat,
         annot=True,
         fmt=".1f",
-        cmap="Greys",
+        cmap="viridis",
         cbar_kws={"label": "Global win % (wins / all rows)"},
         ax=ax,
     )
     ax.set_title("Global win percentage per metric")
     ax.set_xlabel("Metric")
     ax.set_ylabel("Variant")
+    # Adjust annotation color for contrast on the viridis colormap
+    norm = ax.collections[0].norm
+    cmap = ax.collections[0].cmap
+    for text in ax.texts:
+        try:
+            val = float(text.get_text())
+        except ValueError:
+            continue
+        rgba = cmap(norm(val))
+        luminance = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
+        text.set_color("black" if luminance > 0.5 else "white")
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    mdpi_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -310,7 +323,7 @@ def plot_human_vs_auto(comparison: pd.DataFrame, output_path: Path):
     ax.set_xticklabels([SOURCE_LABEL.get(s, s) for s in SOURCES], rotation=20, ha="right")
     ax.legend(handles=handles, title="Source")
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    mdpi_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -326,35 +339,34 @@ def plot_variant_bars(comparison: pd.DataFrame, output_path: Path):
         ]
     ].melt(id_vars="variant", var_name="source", value_name="percent")
     fig, ax = plt.subplots(figsize=(8, 4))
+    source_colors = dict(zip(SOURCES, sns.color_palette("colorblind", len(SOURCES))))
     sns.barplot(
         data=tidy,
         x="variant",
         y="percent",
         hue="source",
         hue_order=SOURCES,
-        palette="Greys",
+        palette=source_colors,
         ax=ax,
     )
-    # Apply styling/labels per source container to avoid misalignment
     for source, container in zip(SOURCES, ax.containers):
         for patch in container:
-            patch.set_hatch(HATCHES_SOURCE.get(source, ""))
             patch.set_edgecolor("black")
-            patch.set_facecolor("white")
+            patch.set_linewidth(0.4)
     ax.set_ylabel("Percent")
     ax.set_title("Human vs. automatic win percentages per variant")
     handles = [
         Patch(
-            facecolor="white",
+            facecolor=source_colors[s],
             edgecolor="black",
-            hatch=HATCHES_SOURCE.get(s, ""),
+            linewidth=0.4,
             label=SOURCE_LABEL.get(s, s),
         )
         for s in SOURCES
     ]
     ax.legend(handles=handles, title="Source")
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    mdpi_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -394,7 +406,7 @@ def plot_human_vs_auto_scatter(comparison: pd.DataFrame, output_path: Path):
         ax.legend(by_label.values(), by_label.keys(), title="Variant", frameon=False)
     axes[0].set_ylabel("Automatic metric global win percent")
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    mdpi_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -439,13 +451,13 @@ def plot_rank_heatmap(dist_df: pd.DataFrame, metric: str, output_path: Path):
     ax.set_xlabel("Rank position")
     ax.set_ylabel("Variant")
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    mdpi_style.save(output_path, fig)
     plt.close(fig)
 
 
 def main():
     args = parse_args()
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="whitegrid", font="Arial", rc={"axes.unicode_minus": False})
 
     df = load_automatic_measures(args.csv)
     output_dir = args.output_dir

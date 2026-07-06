@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 import matplotlib.pyplot as plt
+import mdpi_style
+mdpi_style.apply()
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -245,7 +247,7 @@ def compute_preference_table(pair_df: pd.DataFrame) -> pd.DataFrame:
 
 def plot_flip_rates(folder_summary: pd.DataFrame, output_dir: Path) -> None:
     """Bar plot of flip rates (order instability) per folder."""
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="whitegrid", font="Arial", rc={"axes.unicode_minus": False})
     plt.figure(figsize=(10, 4))
     order = sorted(folder_summary["folder"].unique(), key=lambda x: int(x))
     hue_order = ["gg_vs_cg", "gc_vs_cc"]
@@ -276,20 +278,20 @@ def plot_flip_rates(folder_summary: pd.DataFrame, output_dir: Path) -> None:
             ax.text(x, y + 0.02, label, ha="center", va="bottom", fontsize=8, rotation=0)
 
     plt.tight_layout()
-    plt.savefig(output_dir / "flip_rate_per_folder.png", dpi=300)
+    mdpi_style.save(output_dir / "flip_rate_per_folder.png")
     plt.close()
 
 
 def plot_rank_diff_distribution(pair_df: pd.DataFrame, output_dir: Path) -> None:
     """Boxplot of rank differences for each pair across all raters and folders."""
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="whitegrid", font="Arial", rc={"axes.unicode_minus": False})
     plt.figure(figsize=(6, 4))
     ax = sns.boxplot(data=pair_df, x="pair", y="rank_diff", palette="Set2")
     ax.axhline(0, color="gray", linestyle="--", linewidth=1)
     ax.set_ylabel("Rank difference (first - second)")
     ax.set_title("Rank difference distribution by pair")
     plt.tight_layout()
-    plt.savefig(output_dir / "rank_difference_boxplot.png", dpi=300)
+    mdpi_style.save(output_dir / "rank_difference_boxplot.png")
     plt.close()
 
 
@@ -297,8 +299,8 @@ def plot_mean_rank_diff_heatmap(folder_summary: pd.DataFrame, output_dir: Path) 
     """Heatmap of mean rank differences per folder (direction and magnitude), B/W friendly."""
     pivot = folder_summary.pivot(index="pair", columns="folder", values="mean_rank_diff")
     plt.figure(figsize=(12, 3))
-    # Use a grayscale map centered at 0 to stay printer-friendly
-    cmap = sns.color_palette("Greys", as_cmap=True)
+    # Diverging color map centered at 0 (negative = blue, positive = red)
+    cmap = sns.color_palette("coolwarm", as_cmap=True)
     ax = sns.heatmap(
         pivot,
         cmap=cmap,
@@ -323,13 +325,13 @@ def plot_mean_rank_diff_heatmap(folder_summary: pd.DataFrame, output_dir: Path) 
         luminance = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
         text.set_color("black" if luminance > 0.5 else "white")
     plt.tight_layout()
-    plt.savefig(output_dir / "mean_rank_difference_heatmap.png", dpi=300)
+    mdpi_style.save(output_dir / "mean_rank_difference_heatmap.png")
     plt.close()
 
 
 def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, output_dir: Path) -> None:
     """Plot dataset-level summaries (flip rate and rank difference) per pair."""
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="whitegrid", font="Arial", rc={"axes.unicode_minus": False})
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     # Flip rates
@@ -358,7 +360,7 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
     axes[1].set_xlabel("Pair")
 
     plt.tight_layout()
-    fig.savefig(output_dir / "pair_summary.png", dpi=300)
+    mdpi_style.save(output_dir / "pair_summary.png", fig)
     plt.close(fig)
 
     # Global summary table snapshot (saved as CSV already); add a simple bar for global flip rate.
@@ -374,13 +376,13 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
     plt.xlabel("Pair")
     plt.title("Global flip rate (all folders/raters)")
     plt.tight_layout()
-    plt.savefig(output_dir / "global_flip_rate.png", dpi=300)
+    mdpi_style.save(output_dir / "global_flip_rate.png")
     plt.close()
 
 
 def plot_preference_table(pref_table: pd.DataFrame, output_dir: Path) -> None:
     """Plot the single-row preference percentages as a bar chart."""
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="whitegrid", font="Arial", rc={"axes.unicode_minus": False})
     order = ["gg>cg", "cg>gg", "gc>cc", "cc>gc"]
     melted = pref_table.melt(value_vars=order, var_name="ordering", value_name="percentage")
     palette = {
@@ -406,7 +408,7 @@ def plot_preference_table(pref_table: pd.DataFrame, output_dir: Path) -> None:
             fontsize=8,
         )
     plt.tight_layout()
-    plt.savefig(output_dir / "preference_table.png", dpi=300)
+    mdpi_style.save(output_dir / "preference_table.png")
     plt.close()
 
 

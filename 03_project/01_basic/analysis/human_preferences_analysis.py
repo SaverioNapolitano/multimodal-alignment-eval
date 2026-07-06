@@ -1,6 +1,8 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import mdpi_style
+mdpi_style.apply()
 from pathlib import Path
 import warnings
 
@@ -83,7 +85,7 @@ def plot_heatmap(percentages, title, save_path: Path):
         heatmap_data,
         annot=True,
         fmt=".1f",
-        cmap="Greys",
+        cmap="viridis",
         xticklabels=positions,
         yticklabels=VARIANTS,
         cbar_kws={'label': 'Percentage (%)'},
@@ -93,7 +95,7 @@ def plot_heatmap(percentages, title, save_path: Path):
     plt.title(title)
     plt.xlabel("Ranking Position")
     plt.ylabel("AI-Generated Variant")
-    # Improve readability in B/W by adjusting text color based on cell value
+    # Adjust annotation text color for contrast on the viridis colormap
     vmax = heatmap_data.max()
     threshold = vmax * 0.5 if vmax else 0
     for text in ax.texts:
@@ -102,9 +104,10 @@ def plot_heatmap(percentages, title, save_path: Path):
             val = float(text.get_text().strip("%"))
         except ValueError:
             val = 0
-        text.set_color("white" if val > threshold else "black")
+        # viridis is dark at low values, bright at high values
+        text.set_color("black" if val > threshold else "white")
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300)
+    mdpi_style.save(save_path)
     plt.close()
 
 
