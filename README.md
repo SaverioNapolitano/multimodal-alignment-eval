@@ -1,4 +1,4 @@
-# QRD 
+# QRD
 
 Material for the Quantitative Research and Development exam.
 
