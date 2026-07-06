@@ -1,7 +1,6 @@
 # Evaluating Multimodal Alignment in ChatGPT and Gemini
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
-*Note: Replace the XXXXXXX with your actual Zenodo Concept DOI once generated.*
+[![DOI](https://zenodo.org/badge/1061989386.svg)](https://doi.org/10.5281/zenodo.21223838)
 
 This repository contains the code and data for the paper **"Evaluating Multimodal Alignment in ChatGPT and Gemini: An Empirical Study of Inter- and Intra-Model Consistency in Image Description and Generation"**.
 
