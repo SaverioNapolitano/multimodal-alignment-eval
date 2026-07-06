@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/1061989386.svg)](https://doi.org/10.5281/zenodo.21223838)
 
-This repository contains the code and data for the paper **"Evaluating Multimodal Alignment in ChatGPT and Gemini: An Empirical Study of Inter- and Intra-Model Consistency in Image Description and Generation"**.
+This repository contains the code and data for the paper **"Do Automatic Image Similarity Metrics Reflect Human Preferences? A Human Study of ChatGPT and Gemini Image Reconstruction"**.
 
 ## Overview
 
