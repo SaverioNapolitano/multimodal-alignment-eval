@@ -1,0 +1,3 @@
+comparison,n,wilcoxon_stat,pvalue
+clip_cosine_gt_lpips,15,73.5,0.11092333011340011
+clip_cosine_gt_ms_ssim,15,87.0,0.05904504638368831

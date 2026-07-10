@@ -1,0 +1,3 @@
+pair,total_votes,first_better,second_better,ties,global_flip_rate,global_mean_rank_diff,global_mean_abs_rank_diff,global_std_rank_diff
+gc_vs_cc,150,71,79,0,0.4733333333333334,0.04666666666666667,1.3266666666666667,1.4345111439867668
+gg_vs_cg,150,94,56,0,0.3733333333333333,-0.5266666666666666,1.62,1.7192892588379523

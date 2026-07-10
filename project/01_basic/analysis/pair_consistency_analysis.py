@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 import matplotlib.pyplot as plt
-import mdpi_style
-mdpi_style.apply()
+import frontiers_style
+frontiers_style.apply()
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -278,7 +278,7 @@ def plot_flip_rates(folder_summary: pd.DataFrame, output_dir: Path) -> None:
             ax.text(x, y + 0.02, label, ha="center", va="bottom", fontsize=8, rotation=0)
 
     plt.tight_layout()
-    mdpi_style.save(output_dir / "flip_rate_per_folder.png")
+    frontiers_style.save(output_dir / "flip_rate_per_folder.png")
     plt.close()
 
 
@@ -291,14 +291,14 @@ def plot_rank_diff_distribution(pair_df: pd.DataFrame, output_dir: Path) -> None
     ax.set_ylabel("Rank difference (first - second)")
     ax.set_title("Rank difference distribution by pair")
     plt.tight_layout()
-    mdpi_style.save(output_dir / "rank_difference_boxplot.png")
+    frontiers_style.save(output_dir / "rank_difference_boxplot.png")
     plt.close()
 
 
 def plot_mean_rank_diff_heatmap(folder_summary: pd.DataFrame, output_dir: Path) -> None:
     """Heatmap of mean rank differences per folder (direction and magnitude), B/W friendly."""
     pivot = folder_summary.pivot(index="pair", columns="folder", values="mean_rank_diff")
-    plt.figure(figsize=(12, 3))
+    plt.figure(figsize=(7.8, 2.5))  # <=20 cm wide (Frontiers portal 8.5-20 cm)
     # Diverging color map centered at 0 (negative = blue, positive = red)
     cmap = sns.color_palette("coolwarm", as_cmap=True)
     ax = sns.heatmap(
@@ -325,7 +325,7 @@ def plot_mean_rank_diff_heatmap(folder_summary: pd.DataFrame, output_dir: Path) 
         luminance = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
         text.set_color("black" if luminance > 0.5 else "white")
     plt.tight_layout()
-    mdpi_style.save(output_dir / "mean_rank_difference_heatmap.png")
+    frontiers_style.save(output_dir / "mean_rank_difference_heatmap.tif")
     plt.close()
 
 
@@ -360,7 +360,7 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
     axes[1].set_xlabel("Pair")
 
     plt.tight_layout()
-    mdpi_style.save(output_dir / "pair_summary.png", fig)
+    frontiers_style.save(output_dir / "pair_summary.png", fig)
     plt.close(fig)
 
     # Global summary table snapshot (saved as CSV already); add a simple bar for global flip rate.
@@ -376,7 +376,7 @@ def plot_pair_summary(pair_summary: pd.DataFrame, global_summary: pd.DataFrame, 
     plt.xlabel("Pair")
     plt.title("Global flip rate (all folders/raters)")
     plt.tight_layout()
-    mdpi_style.save(output_dir / "global_flip_rate.png")
+    frontiers_style.save(output_dir / "global_flip_rate.png")
     plt.close()
 
 
@@ -408,7 +408,7 @@ def plot_preference_table(pref_table: pd.DataFrame, output_dir: Path) -> None:
             fontsize=8,
         )
     plt.tight_layout()
-    mdpi_style.save(output_dir / "preference_table.png")
+    frontiers_style.save(output_dir / "preference_table.png")
     plt.close()
 
 

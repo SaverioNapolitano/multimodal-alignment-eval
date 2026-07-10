@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Sequence
 
 import matplotlib.pyplot as plt
-import mdpi_style
-mdpi_style.apply()
+import frontiers_style
+frontiers_style.apply()
 from matplotlib.patches import Patch
 import pandas as pd
 import seaborn as sns
@@ -179,7 +179,7 @@ def plot_metric_means(variant_means: pd.DataFrame, output_path: Path):
     ]
     ax.legend(handles=handles, title="Variant")
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -209,7 +209,7 @@ def plot_best_heatmap(best_counts: pd.DataFrame, output_path: Path):
         luminance = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
         text.set_color("black" if luminance > 0.5 else "white")
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -323,7 +323,7 @@ def plot_human_vs_auto(comparison: pd.DataFrame, output_path: Path):
     ax.set_xticklabels([SOURCE_LABEL.get(s, s) for s in SOURCES], rotation=20, ha="right")
     ax.legend(handles=handles, title="Source")
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -338,7 +338,8 @@ def plot_variant_bars(comparison: pd.DataFrame, output_path: Path):
             "ms_ssim_global_win_percent",
         ]
     ].melt(id_vars="variant", var_name="source", value_name="percent")
-    fig, ax = plt.subplots(figsize=(8, 4))
+    # Frontiers: two-column width = 180 mm (7.09 in).
+    fig, ax = plt.subplots(figsize=(7.09, 3.8))
     source_colors = dict(zip(SOURCES, sns.color_palette("colorblind", len(SOURCES))))
     sns.barplot(
         data=tidy,
@@ -352,8 +353,9 @@ def plot_variant_bars(comparison: pd.DataFrame, output_path: Path):
     for source, container in zip(SOURCES, ax.containers):
         for patch in container:
             patch.set_edgecolor("black")
-            patch.set_linewidth(0.4)
-    ax.set_ylabel("Percent")
+            patch.set_linewidth(0.6)  # >=0.6 pt keeps bar edges solid at print size
+    ax.set_xlabel("Variant")
+    ax.set_ylabel("Selection rate (%)")
     ax.set_title("Human vs. automatic win percentages per variant")
     handles = [
         Patch(
@@ -366,7 +368,7 @@ def plot_variant_bars(comparison: pd.DataFrame, output_path: Path):
     ]
     ax.legend(handles=handles, title="Source")
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -406,7 +408,7 @@ def plot_human_vs_auto_scatter(comparison: pd.DataFrame, output_path: Path):
         ax.legend(by_label.values(), by_label.keys(), title="Variant", frameon=False)
     axes[0].set_ylabel("Automatic metric global win percent")
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -451,7 +453,7 @@ def plot_rank_heatmap(dist_df: pd.DataFrame, metric: str, output_path: Path):
     ax.set_xlabel("Rank position")
     ax.set_ylabel("Variant")
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -468,7 +470,7 @@ def main():
     best_counts.to_csv(output_dir / "best_by_metric.csv", index=False)
 
     plot_metric_means(variant_means, output_dir / "metric_means.png")
-    plot_best_heatmap(best_counts, output_dir / "metric_winners_heatmap.png")
+    plot_best_heatmap(best_counts, output_dir / "metric_winners_heatmap.tif")
 
     comparison = None
     if args.rankings and Path(args.rankings).exists():
@@ -477,7 +479,7 @@ def main():
         human_top1.to_csv(output_dir / "human_top1_percent.csv", index=False)
         comparison = build_comparison(best_counts, human_top1)
         comparison.to_csv(output_dir / "human_vs_automatic.csv", index=False)
-        plot_variant_bars(comparison, output_dir / "human_vs_automatic_variants.png")
+        plot_variant_bars(comparison, output_dir / "human_vs_automatic_variants.tif")
         plot_human_vs_auto(comparison, output_dir / "human_vs_automatic.png")
         plot_human_vs_auto_scatter(comparison, output_dir / "human_vs_automatic_scatter.png")
 

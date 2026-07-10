@@ -17,8 +17,8 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import mdpi_style
-mdpi_style.apply()
+import frontiers_style
+frontiers_style.apply()
 import seaborn as sns
 from scipy.stats import kendalltau, pearsonr, spearmanr, wilcoxon
 
@@ -198,7 +198,7 @@ def plot_kendalls_w(df: pd.DataFrame, output_path: Path):
     ax.set_title("Inter-rater agreement per image (Kendall's W)")
     ax.legend()
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -215,7 +215,7 @@ def plot_correlations(corr_df: pd.DataFrame, output_dir: Path):
         ax.set_ylabel(f"{stat.replace('_', ' ').title()} correlation")
         ax.set_title(f"{stat.replace('_', ' ').title()} vs human mean ranks (per folder)")
         fig.tight_layout()
-        mdpi_style.save(output_dir / f"correlations_per_folder_{stat}.png", fig)
+        frontiers_style.save(output_dir / f"correlations_per_folder_{stat}.png", fig)
         plt.close(fig)
 
     # Metric-level averages
@@ -226,7 +226,7 @@ def plot_correlations(corr_df: pd.DataFrame, output_dir: Path):
     ax.set_ylabel("Average correlation across folders")
     ax.set_title("Average correlations (human vs automatic metrics)")
     fig.tight_layout()
-    mdpi_style.save(output_dir / "correlations_average.png", fig)
+    frontiers_style.save(output_dir / "correlations_average.png", fig)
     plt.close(fig)
 
     # Save averages to CSV
@@ -285,7 +285,7 @@ def plot_correlations_combined(corr_df: pd.DataFrame, output_path: Path):
     ax.set_title("Per-image correlation summary")
     ax.legend(title="Metric")
     fig.tight_layout()
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -329,7 +329,8 @@ def wilcoxon_spearman(corr_df: pd.DataFrame) -> pd.DataFrame:
 def plot_spearman_ci(boot_df: pd.DataFrame, output_path: Path) -> None:
     """Bar plot of mean Spearman with bootstrap 95% CI."""
     sns.set_theme(style="whitegrid", font="Arial", rc={"axes.unicode_minus": False})
-    fig, ax = plt.subplots(figsize=(6, 4))
+    # Frontiers: single-column width = 85 mm (3.35 in).
+    fig, ax = plt.subplots(figsize=(3.35, 3.0))
     errors = [
         boot_df["mean_spearman"] - boot_df["ci_lower"],
         boot_df["ci_upper"] - boot_df["mean_spearman"],
@@ -342,15 +343,15 @@ def plot_spearman_ci(boot_df: pd.DataFrame, output_path: Path) -> None:
         capsize=4,
         color=bar_colors,
         edgecolor="black",
-        linewidth=0.4,
+        linewidth=0.6,  # >=0.6 pt keeps lines solid at print size (Frontiers)
     )
     ax.axhline(0, color="gray", linestyle="--", linewidth=1)
-    ax.set_ylabel("Mean Spearman (human ranks vs metric ranks)")
+    ax.set_ylabel("Mean Spearman correlation\n(human ranks vs. metric ranks)")
     ax.set_xlabel("Metric")
     ax.set_title("Mean Spearman with 95% bootstrap CI")
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    mdpi_style.save(output_path, fig)
+    frontiers_style.save(output_path, fig)
     plt.close(fig)
 
 
@@ -391,7 +392,7 @@ def main():
     boot_df.to_csv(output_dir / "spearman_bootstrap_ci.csv", index=False)
     wilcoxon_df = wilcoxon_spearman(corr_df)
     wilcoxon_df.to_csv(output_dir / "spearman_wilcoxon.csv", index=False)
-    plot_spearman_ci(boot_df, output_dir / "spearman_mean_ci.png")
+    plot_spearman_ci(boot_df, output_dir / "spearman_mean_ci.tif")
 
     print(f"Wrote Kendall's W to {output_dir / 'kendalls_w.csv'}")
     print(f"Wrote correlations to {output_dir / 'correlations.csv'}")

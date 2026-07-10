@@ -1,8 +1,8 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import mdpi_style
-mdpi_style.apply()
+import frontiers_style
+frontiers_style.apply()
 from pathlib import Path
 import warnings
 
@@ -107,7 +107,7 @@ def plot_heatmap(percentages, title, save_path: Path):
         # viridis is dark at low values, bright at high values
         text.set_color("black" if val > threshold else "white")
     plt.tight_layout()
-    mdpi_style.save(save_path)
+    frontiers_style.save(save_path)
     plt.close()
 
 
@@ -115,7 +115,7 @@ all_blocks = load_blocks(FILE_PATH)
 
 # Overall heatmap
 overall_percent = to_percentages(tally_blocks(all_blocks))
-plot_heatmap(overall_percent, "Placement Percentage (All Raters)", OUTPUT_DIR / "overall.png")
+plot_heatmap(overall_percent, "Placement Percentage (All Raters)", OUTPUT_DIR / "overall.tif")
 
 # Split: first 5 blocks (male) vs remaining (female)
 male_blocks = all_blocks[:5]
