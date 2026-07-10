@@ -1,8 +1,7 @@
-# Do Automatic Image Similarity Metrics Reflect Human Preferences? A Human Study of ChatGPT and Gemini Image Reconstruction
-
+# Automatic Image Similarity Metrics Are Weak Proxies for Human Preference: A Study of ChatGPT and Gemini Image Generation
 [![DOI](https://zenodo.org/badge/1061989386.svg)](https://doi.org/10.5281/zenodo.21223838)
 
-This repository contains the code and data for the paper **"Do Automatic Image Similarity Metrics Reflect Human Preferences? A Human Study of ChatGPT and Gemini Image Reconstruction"**.
+This repository contains the code and data for the paper **"Automatic Image Similarity Metrics Are Weak Proxies for Human Preference: A Study of ChatGPT and Gemini Image Generation"**.
 
 ## Overview
 
